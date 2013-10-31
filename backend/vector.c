@@ -4,34 +4,6 @@
 # include <stdlib.h>
 # include <string.h>
 
-#ifdef BASIC_TIME_TEST // Little loop I made up for comparing pure C vs. Python vs. ctypes vs. extension
-
-# include <time.h>
-
-void main() {
-	int i;
-	int start;
-	double c1[3] = {22.5, 12.8, 80.2};
-	double c2[3] = {81.0, 5.0, 56.1};
-	Vector *a = vectorNew(c1, 3);
-	Vector *b = vectorNew(c2, 3);
-	start = clock();
-	for (i=0; i<100000; i++) {
-		vectorAdd(a, b);
-		vectorSub(a, b);
-		vectorCompare(a, b);
-		angle(a, b);
-		vectorLength(a);
-		vectorLength(b);
-		dotProduct(a, b);
-		crossProduct(a, b);
-	}
-	printf("%f ", (float)(clock()-start)/CLOCKS_PER_SEC);
-	getchar();
-}
-
-#endif
-
 DLLEX Vector *vectorNew(double *components, int demensions) {
 	
 	int componentSize = demensions*sizeof(double); // size of components in bytes
@@ -152,3 +124,32 @@ DLLEX double angle(Vector *a, Vector *b) {
 	
 	return theta * 180.0 / PI;
 }
+
+
+#ifdef BASIC_TIME_TEST // Little loop I made up for comparing pure C vs. Python vs. ctypes vs. extension
+
+# include <time.h>
+
+void main() {
+	int i;
+	int start;
+	double c1[3] = {22.5, 12.8, 80.2};
+	double c2[3] = {81.0, 5.0, 56.1};
+	Vector *a = vectorNew(c1, 3);
+	Vector *b = vectorNew(c2, 3);
+	start = clock();
+	for (i=0; i<100000; i++) {
+		vectorAdd(a, b);
+		vectorSub(a, b);
+		vectorCompare(a, b);
+		angle(a, b);
+		vectorLength(a);
+		vectorLength(b);
+		dotProduct(a, b);
+		crossProduct(a, b);
+	}
+	printf("%f ", (float)(clock()-start)/CLOCKS_PER_SEC);
+	getchar();
+}
+
+#endif
