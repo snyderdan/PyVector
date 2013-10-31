@@ -161,14 +161,49 @@ static int VectorObject_init(VectorObject *self, PyObject *args) {
 
 static PyMethodDef VectorObject_methods[] = {
     {"copy", VectorObject_copy, METH_NOARGS, copy_docstring},
-    {"__add__", VectorObject_add, METH_COEXIST, add_docstring},
-    {"__sub__", VectorObject_sub, METH_O, sub_docstring},
-    {"__len__", VectorObject_length, METH_NOARGS, magnitude_docstring},
+    {"length", VectorObject_length, METH_NOARGS, magnitude_docstring},
+    {"magnitude", VectorObject_length, METH_NOARGS, magnitude_docstring},
+    {"cross", VectorObject_crossProduct, METH_O, crossProduct_docstring},
     {"crossProduct", VectorObject_crossProduct, METH_O, crossProduct_docstring},
+    {"dot", VectorObject_dotProduct, METH_O, dotProduct_docstring},
     {"dotProduct", VectorObject_dotProduct, METH_O, dotProduct_docstring},
+    {"angle", VectorObject_angle, METH_O, angle_docstring}, 
     {"angularDifference", VectorObject_angle, METH_O, angle_docstring}, 
+    {"normalize", VectorObject_normalize, METH_O, NULL},
     {NULL, NULL, 0, NULL}
 }; 
+
+static PyNumberMethods VectorObject_as_number = {
+    VectorObject_add,        /*nb_add*/
+    VectorObject_sub,        /*nb_subtract*/
+    VectorObject_mul,        /*nb_multiply*/
+    VectorObject_div,        /*nb_divide*/
+    0,                       /*nb_remainder*/
+    0,                       /*nb_divmod*/
+    0,                       /*nb_power*/
+    VectorObject_neg,        /*nb_negative*/
+    0,                       /*nb_positive*/
+    VectorObject_length,        /*nb_absolute*/
+    VectorObject_nonzero,       /*nb_nonzero*/
+    VectorObject_neg,           /*nb_invert*/
+    0,                          /*nb_lshift*/
+    0,                          /*nb_rshift*/
+    0,                          /*nb_and*/
+    0,                          /*nb_xor*/
+    0,                          /*nb_or*/
+    0,                          /*nb_coerce*/
+    0,                          /*nb_int*/
+    0,                          /*nb_long*/
+    0,                          /*nb_float*/
+    0,                          /*nb_oct*/
+    0,                          /*nb_hex*/
+    0,                          /*nb_inplace_add*/
+    0,                          /*nb_inplace_subtract*/
+    0,                          /*nb_inplace_multiply*/
+    0,                          /*nb_inplace_divide*/
+    0,                          /*nb_inplace_remainder*/
+    0,                          /*nb_inplace_power*/
+};
 
 static PyMethodDef module_methods[] = {
 	{NULL, NULL, 0, NULL}
@@ -194,7 +229,7 @@ static PyTypeObject VectorObjectType = {
     0,                         /*tp_setattr*/
     VectorObject_cmp,          /*tp_compare*/
     0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
+    VectorObject_as_number,    /*tp_as_number*/
     0,                         /*tp_as_sequence*/
     0,                         /*tp_as_mapping*/
     0,                         /*tp_hash */

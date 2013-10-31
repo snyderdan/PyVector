@@ -16,23 +16,27 @@ typedef struct {
     Vector *v;
 } VectorObject;
 
-static int VectorObject_cmp(VectorObject *self, VectorObject *other); // declared differently because it is set as a cmp function instead of a class method
-static PyObject *VectorObject_copy(VectorObject *self);
+// comparisons
+static int VectorObject_cmp(VectorObject *self, VectorObject *other);
+static PyObject *VectorObject_nonzero(VectorObject *self);
+// vector return values
 static PyObject *VectorObject_add(VectorObject *self, VectorObject *other);
 static PyObject *VectorObject_sub(VectorObject *self, VectorObject *other);
-static PyObject *VectorObject_length(VectorObject *self);
+static PyObject *VectorObject_mul(VectorObject *self, PyObject *other);
+static PyObject *VectorObject_div(VectorObject *self, PyObject *other);
 static PyObject *VectorObject_crossProduct(VectorObject *self, VectorObject *other);
+static PyObject *VectorObject_normalize(VectorObject *self);
+static PyObject *VectorObject_copy(VectorObject *self);
+// scalar return values
 static PyObject *VectorObject_dotProduct(VectorObject *self, VectorObject *other);
 static PyObject *VectorObject_angle(VectorObject *self, VectorObject *other); 
+static PyObject *VectorObject_neg(VectorObject *self);
+static PyObject *VectorObject_length(VectorObject *self);
 
 static char module_docstring[] =
     "This module provides an interface for vector processing in C.";
 static char copy_docstring[] =
 	"Returns a copy of the vector argument.";
-static char add_docstring[] =
-	"Adds vector A and vector B.";
-static char sub_docstring[] =
-	"Subtracts vector B from vector A.";
 static char magnitude_docstring[] = 
 	"Computes the magnitude of a vector.";
 static char crossProduct_docstring[] =
