@@ -54,6 +54,36 @@ DLLEX Vector *vectorSub(Vector *a, Vector *b) {
 	return v;
 }
 
+DLLEX Vector *vectorMul(Vector *a, double b) {
+	
+	Vector *v;
+	
+	v = vectorCopy(a);
+	
+	// we simply multiply each component of the vector by the scalar
+	// this way the magnitude will be scaled by b, but the direction will remain the same
+	v->components[0] *= b;
+	v->components[1] *= b;
+	v->components[2] *= b;
+	
+	return v;
+}
+
+DLLEX Vector *vectorDiv(Vector *a, double b) {
+	
+	Vector *v;
+	
+	v = vectorCopy(a);
+	
+	// we simply divide each component of the vector by the scalar
+	// this way the magnitude will be divided by b, but the direction will remain the same
+	v->components[0] /= b;
+	v->components[1] /= b;
+	v->components[2] /= b;
+	
+	return v;
+}
+
 DLLEX double vectorLength(Vector *a) {
 	
 	double sum;

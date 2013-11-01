@@ -18,7 +18,7 @@ typedef struct {
 
 // comparisons
 static int VectorObject_cmp(VectorObject *self, VectorObject *other);
-static PyObject *VectorObject_nonzero(VectorObject *self);
+static int VectorObject_nonzero(VectorObject *self);
 // vector return values
 static PyObject *VectorObject_add(VectorObject *self, VectorObject *other);
 static PyObject *VectorObject_sub(VectorObject *self, VectorObject *other);

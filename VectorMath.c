@@ -112,7 +112,7 @@ static PyObject * VectorObject_new(PyTypeObject *type, PyObject *args) {
 		return (PyObject *)NULL;
 	}
 	
-	self->v = malloc(sizeof(Vector));  // Allocate vector instead of creating new one because we have no components
+	self->v = calloc(sizeof(Vector));  // Allocate vector without intializing components
 
     return (PyObject *)self;
 }
@@ -174,18 +174,18 @@ static PyMethodDef VectorObject_methods[] = {
 }; 
 
 static PyNumberMethods VectorObject_as_number = {
-    VectorObject_add,        /*nb_add*/
-    VectorObject_sub,        /*nb_subtract*/
-    VectorObject_mul,        /*nb_multiply*/
-    VectorObject_div,        /*nb_divide*/
+    (binaryfunc)VectorObject_add,        /*nb_add*/
+    (binaryfunc)VectorObject_sub,        /*nb_subtract*/
+    (binaryfunc)VectorObject_mul,        /*nb_multiply*/
+    (binaryfunc)VectorObject_div,        /*nb_divide*/
     0,                       /*nb_remainder*/
     0,                       /*nb_divmod*/
     0,                       /*nb_power*/
-    VectorObject_neg,        /*nb_negative*/
+    (unaryfunc)VectorObject_neg,        /*nb_negative*/
     0,                       /*nb_positive*/
-    VectorObject_length,        /*nb_absolute*/
-    VectorObject_nonzero,       /*nb_nonzero*/
-    VectorObject_neg,           /*nb_invert*/
+    (unaryfunc)VectorObject_length,        /*nb_absolute*/
+    (inquiry)VectorObject_nonzero,       /*nb_nonzero*/
+    (unaryfunc)VectorObject_neg,           /*nb_invert*/
     0,                          /*nb_lshift*/
     0,                          /*nb_rshift*/
     0,                          /*nb_and*/
@@ -218,7 +218,7 @@ static PyMethodDef module_methods[] = {
  */
 
 static PyTypeObject VectorObjectType = {
-    PyObject_HEAD_INIT(NULL)
+    PyObject_HEAD_INIT(&PyType_Type)
     0,                         /*ob_size*/
     "_VectorMath.Vector",       /*tp_name*/
     sizeof(VectorObject),      /*tp_basicsize*/
@@ -229,7 +229,7 @@ static PyTypeObject VectorObjectType = {
     0,                         /*tp_setattr*/
     VectorObject_cmp,          /*tp_compare*/
     0,                         /*tp_repr*/
-    VectorObject_as_number,    /*tp_as_number*/
+    &VectorObject_as_number,    /*tp_as_number*/
     0,                         /*tp_as_sequence*/
     0,                         /*tp_as_mapping*/
     0,                         /*tp_hash */
@@ -279,8 +279,8 @@ static PyObject *VectorObject_add(VectorObject *self, VectorObject *other) {
 	}
 	
 	result    = (VectorObject *) VectorObject_new(&VectorObjectType, NULL); // Create new PyVector
-	temp      = result->v;
-	result->v = vr;	
+	temp      = result->v;      // this whole process basically frees the vector currently allocated, and sets the pointer equal to the resultant vector
+	result->v = vr;	            // It's faster than copying the data over because either way we have to free a vector. So this way we just toss a pointer around instead of 3 doubles
 	
 	vectorFree(temp);
 	
@@ -393,6 +393,84 @@ static int VectorObject_cmp(VectorObject *self, VectorObject *other) {
 		// If we have the same number of demensions, then we compare magnitudes
 		return vectorCompare(self->v, other->v);
 	}
+}
+
+static int VectorObject_nonzero(VectorObject *self) {
+	
+	if (vectorLength(self->v)) { // If it has any sort of length, then it is not zero
+		return 1;
+	}
+	
+	return 0;  // Otherwise it is zero
+}
+
+static PyObject *VectorObject_mul(VectorObject *self, PyObject *other) {
+	
+	double k;
+	VectorObject *ret;
+	Vector *temp, *vr;
+	
+	if (PyObject_TypeCheck(other, &VectorObjectType)) {  // If the other object is a vector
+	
+		return VectorObject_dotProduct(self, other);     // make the crude assumption they meant dot product.
+		 
+	} else {
+		
+		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's either a float or an int
+		ret = (VectorObject *) VectorObject_new(&VectorObjectType, NULL);  // Create new pyvector object
+		
+		vr     = vectorMul(self->v, k);       // multiply the vector by constant k
+		temp   = ret->v;              // set temp equal to currently allocated vector
+		ret->v = vr;                  // set the vector pointer to the resulting vector
+		
+		vectorFree(temp);             // free the previously allocated vector
+		
+	    return (PyObject *) v;
+	}
+}
+
+static PyObject *VectorObject_div(VectorObject *self, PyObject *other) {
+	
+	double k;
+	VectorObject *ret;
+	Vector *temp, *vr;
+	
+	if (PyObject_TypeCheck(other, &VectorObjectType)) {  // If the other object is a vector
+	
+		return VectorObject_dotProduct(self, other);     // make the crude assumption they meant dot product.
+		 
+	} else {
+		
+		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's either a float or an int
+		ret = (VectorObject *) VectorObject_new(&VectorObjectType, NULL);  // Create new pyvector object
+		
+		vr     = vectorDiv(self->v, k);       // multiply the vector by constant k
+		temp   = ret->v;              // set temp equal to currently allocated vector
+		ret->v = vr;                  // set the vector pointer to the resulting vector
+		
+		vectorFree(temp);             // free the previously allocated vector
+		
+	    return (PyObject *) v;
+	}
+}
+
+static PyObject *VectorObject_neg(VectorObject *self) {
+	
+	VectorObject *ret;
+	Vector *inverse, *temp
+	
+	ret = VectorObject_new(&VectorObjectType, NULL); // create PyVector object
+	
+	inverse = vectorSub(ret->v, self->v);  // new vector is initialized to zero, so we subtract the vector to get it's inverse
+	temp    = ret->v;
+	ret->v  = inverse;
+	
+	vectorFree(temp);  // free allocated vector
+	
+	return (PyObject *) ret;
+}
+
+static PyObject *VectorObject_normalize(VectorObject *self) {
 }
 
 
