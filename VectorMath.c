@@ -112,7 +112,7 @@ static PyObject * VectorObject_new(PyTypeObject *type, PyObject *args) {
 		return (PyObject *)NULL;
 	}
 	
-	self->v = calloc(sizeof(Vector));  // Allocate vector without intializing components
+	self->v = calloc(sizeof(Vector), 0);  // Allocate vector without intializing components 
 
     return (PyObject *)self;
 }
@@ -218,9 +218,9 @@ static PyMethodDef module_methods[] = {
  */
 
 static PyTypeObject VectorObjectType = {
-    PyObject_HEAD_INIT(&PyType_Type)
+    PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "_VectorMath.Vector",       /*tp_name*/
+    "VectorMath.Vector",       /*tp_name*/
     sizeof(VectorObject),      /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)VectorObject_dealloc, /*tp_dealloc*/
@@ -425,7 +425,7 @@ static PyObject *VectorObject_mul(VectorObject *self, PyObject *other) {
 		
 		vectorFree(temp);             // free the previously allocated vector
 		
-	    return (PyObject *) v;
+	    return (PyObject *) ret;
 	}
 }
 
@@ -450,14 +450,14 @@ static PyObject *VectorObject_div(VectorObject *self, PyObject *other) {
 		
 		vectorFree(temp);             // free the previously allocated vector
 		
-	    return (PyObject *) v;
+	    return (PyObject *) ret;
 	}
 }
 
 static PyObject *VectorObject_neg(VectorObject *self) {
 	
 	VectorObject *ret;
-	Vector *inverse, *temp
+	Vector *inverse, *temp;
 	
 	ret = VectorObject_new(&VectorObjectType, NULL); // create PyVector object
 	
