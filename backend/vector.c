@@ -97,6 +97,17 @@ DLLEX double vectorLength(Vector *a) {
 	return sqrt(sum); // return the square root of the sum, which is the length
 }
 
+DLLEX Vector *vectorNormalize(Vector *v) {
+	
+	double length;
+	Vector *ret;
+	
+	length = vectorLength(v);
+	ret    = vectorDiv(v, length);
+	
+	return ret;
+}
+
 DLLEX int vectorCompare(Vector *a, Vector *b) {
 	
 	double l1, l2;

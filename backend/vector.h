@@ -20,6 +20,7 @@ DLLEX Vector __cdecl *vectorAdd(Vector *a, Vector *b);    // Adds vectors A and 
 DLLEX Vector __cdecl *vectorSub(Vector *a, Vector *b);    // Subtracts vector b from vector a
 DLLEX int    __cdecl vectorCompare(Vector *a, Vector *b); // Compares the magnitude of two vectors, returns: -1 if a < b; 0 if a == b; 1 if a > b
 DLLEX double __cdecl vectorLength(Vector *v);             // Returns magnitude or length of the vector
+DLLEX Vector __cdecl *vectorNormalize(Vector *v);         // Returns normalized vector
 DLLEX Vector __cdecl *vectorMul(Vector *a, double b);     // Multiply the vector by a scalar
 DLLEX Vector __cdecl *vectorDiv(Vector *a, double b);     // Divide vector by scalar
 DLLEX double __cdecl dotProduct(Vector *a, Vector *b);    // Calculates and returns the dot product of the two vector quantities; a and b remain unaltered

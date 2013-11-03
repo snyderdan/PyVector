@@ -31,7 +31,8 @@ static PyMethodDef PyVector_methods[] = {
     {"dotProduct", PyVector_dotProduct, METH_O, dotProduct_docstring},
     {"angle", PyVector_angle, METH_O, angle_docstring}, 
     {"angularDifference", PyVector_angle, METH_O, angle_docstring}, 
-    {"normalize", PyVector_normalize, METH_O, NULL},
+    {"norm", PyVector_normalize, METH_NOARGS, NULL},
+    {"normalize", PyVector_normalize, METH_NOARGS, NULL},
     {NULL, NULL, 0, NULL}
 }; 
 
@@ -282,7 +283,7 @@ static void PyVector_dealloc(PyVector *self) {
  
 static PyObject *PyVector_copy(PyVector *self) {
 	
-	PyVector *result = (PyVector *) PyVector_new(&PyVectorType, NULL);
+	PyVector *result = (PyVector *) PyVector_new(self->ob_type, NULL);
 	Vector *temp, *v = vectorCopy(self->v);
 	
 	temp = result->v;
@@ -304,7 +305,7 @@ static PyObject *PyVector_add(PyVector *self, PyVector *other) {
 		return NULL;
 	}
 	
-	result    = (PyVector *) PyVector_new(&PyVectorType, NULL); // Create new PyVector
+	result    = (PyVector *) PyVector_new(self->ob_type, NULL); // Create new PyVector
 	temp      = result->v;      // this whole process basically frees the vector currently allocated, and sets the pointer equal to the resultant vector
 	result->v = vr;	            // It's faster than copying the data over because either way we have to free a vector. So this way we just toss a pointer around instead of 3 doubles
 	
@@ -324,7 +325,7 @@ static PyObject *PyVector_sub(PyVector *self, PyVector *other) {
 		return NULL;
 	}
 	
-	result    = (PyVector *) PyVector_new(&PyVectorType, NULL); // Create new PyVector
+	result    = (PyVector *) PyVector_new(self->ob_type, NULL); // Create new PyVector
 	temp      = result->v;
 	result->v = vr;	
 	
@@ -344,7 +345,7 @@ static PyObject *PyVector_crossProduct(PyVector *self, PyVector *other) {
 		return NULL;
 	}
 	
-	retObject = (PyVector *) PyVector_new(&PyVectorType, NULL);
+	retObject = (PyVector *) PyVector_new(self->ob_type, NULL);
 	temp      = retObject->v;
 	retObject->v = vr;
 	
@@ -359,14 +360,14 @@ static PyObject *PyVector_mul(PyVector *self, PyObject *other) {
 	PyVector *ret;
 	Vector *temp, *vr;
 	
-	if (PyObject_TypeCheck(other, &PyVectorType)) {  // If the other object is a vector
+	if (PyObject_TypeCheck(other, self->ob_type)) {  // If the other object is a vector
 	
 		return PyVector_dotProduct(self, other);     // make the crude assumption they meant dot product.
 		 
 	} else {
 		
 		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's either a float or an int
-		ret = (PyVector *) PyVector_new(&PyVectorType, NULL);  // Create new pyvector object
+		ret = (PyVector *) PyVector_new(self->ob_type, NULL);  // Create new pyvector object
 		
 		vr     = vectorMul(self->v, k);       // multiply the vector by constant k
 		temp   = ret->v;              // set temp equal to currently allocated vector
@@ -384,14 +385,14 @@ static PyObject *PyVector_div(PyVector *self, PyObject *other) {
 	PyVector *ret;
 	Vector *temp, *vr;
 	
-	if (PyObject_TypeCheck(other, &PyVectorType)) {  // If the other object is a vector
+	if (PyObject_TypeCheck(other, self->ob_type)) {  // If the other object is a vector
 	
-		return PyVector_dotProduct(self, other);     // make the crude assumption they meant dot product.
+		return (PyObject *)NULL; // have no defined way to divide vectors. 
 		 
-	} else {
+	} else {  // We can however divide by scalars!
 		
 		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's either a float or an int
-		ret = (PyVector *) PyVector_new(&PyVectorType, NULL);  // Create new pyvector object
+		ret = (PyVector *) PyVector_new(self->ob_type, NULL);  // Create new pyvector object
 		
 		vr     = vectorDiv(self->v, k);       // multiply the vector by constant k
 		temp   = ret->v;              // set temp equal to currently allocated vector
@@ -406,20 +407,31 @@ static PyObject *PyVector_div(PyVector *self, PyObject *other) {
 static PyObject *PyVector_neg(PyVector *self) {
 	
 	PyVector *ret;
-	Vector *inverse, *temp;
 	
-	ret = PyVector_new(&PyVectorType, NULL); // create PyVector object
+	ret = PyVector_new(self->ob_type, NULL); // create PyVector object
 	
-	inverse = vectorSub(ret->v, self->v);  // new vector is initialized to zero, so we subtract the vector to get it's inverse
-	temp    = ret->v;
-	ret->v  = inverse;
+	free(ret->v);
 	
-	free(temp);  // free allocated vector
+	ret->v = vectorCopy(self->v);            // copy c-vector member
+	
+	ret->v->components[0] = -ret->v->components[0];  // negate each component
+	ret->v->components[1] = -ret->v->components[1];
+	ret->v->components[2] = -ret->v->components[2];
 	
 	return (PyObject *) ret;
 }
 
 static PyObject *PyVector_normalize(PyVector *self) {
+	
+	PyVector *newVect;
+	
+	newVect = (PyVector *) PyVector_new(self->ob_type, NULL);
+	
+	free(newVect->v);
+	
+	newVect->v = vectorNormalize(self->v);
+
+	return (PyObject *) newVect;
 }
 
 static PyObject *PyVector_length(PyVector* self) {
