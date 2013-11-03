@@ -126,7 +126,7 @@ DLLEX int vectorCompare(Vector *a, Vector *b) {
 
 DLLEX double dotProduct(Vector *a, Vector *b) { // scalar product
 	
-	int sum;
+	double sum;
 	
 	// add up the products of the components for each vector
 	sum = (a->components[0] * b->components[0]);
