@@ -12,6 +12,121 @@
  * convert the C values to Python objects, and only do it when we need to access
  * the members from Python
  */
+ 
+/*
+ ***********************************************************************
+ * 
+ * Define methods of Vector object
+ * 
+ ***********************************************************************
+ */
+
+static PyMethodDef PyVector_methods[] = {
+    {"copy", PyVector_copy, METH_NOARGS, copy_docstring},
+    {"length", PyVector_length, METH_NOARGS, magnitude_docstring},
+    {"magnitude", PyVector_length, METH_NOARGS, magnitude_docstring},
+    {"cross", PyVector_crossProduct, METH_O, crossProduct_docstring},
+    {"crossProduct", PyVector_crossProduct, METH_O, crossProduct_docstring},
+    {"dot", PyVector_dotProduct, METH_O, dotProduct_docstring},
+    {"dotProduct", PyVector_dotProduct, METH_O, dotProduct_docstring},
+    {"angle", PyVector_angle, METH_O, angle_docstring}, 
+    {"angularDifference", PyVector_angle, METH_O, angle_docstring}, 
+    {"normalize", PyVector_normalize, METH_O, NULL},
+    {NULL, NULL, 0, NULL}
+}; 
+
+static PyNumberMethods PyVector_as_number = {
+    (binaryfunc)PyVector_add,        /*nb_add*/
+    (binaryfunc)PyVector_sub,        /*nb_subtract*/
+    (binaryfunc)PyVector_mul,        /*nb_multiply*/
+    (binaryfunc)PyVector_div,        /*nb_divide*/
+    0,                       /*nb_remainder*/
+    0,                       /*nb_divmod*/
+    0,                       /*nb_power*/
+    (unaryfunc)PyVector_neg,        /*nb_negative*/
+    0,                       /*nb_positive*/
+    (unaryfunc)PyVector_length,        /*nb_absolute*/
+    (inquiry)PyVector_nonzero,       /*nb_nonzero*/
+    (unaryfunc)PyVector_neg,           /*nb_invert*/
+    0,                          /*nb_lshift*/
+    0,                          /*nb_rshift*/
+    0,                          /*nb_and*/
+    0,                          /*nb_xor*/
+    0,                          /*nb_or*/
+    0,                          /*nb_coerce*/
+    0,                          /*nb_int*/
+    0,                          /*nb_long*/
+    0,                          /*nb_float*/
+    0,                          /*nb_oct*/
+    0,                          /*nb_hex*/
+    0,                          /*nb_inplace_add*/
+    0,                          /*nb_inplace_subtract*/
+    0,                          /*nb_inplace_multiply*/
+    0,                          /*nb_inplace_divide*/
+    0,                          /*nb_inplace_remainder*/
+    0,                          /*nb_inplace_power*/
+};
+
+static PyGetSetDef PyVector_getset[] = {
+	{"components", PyVector_getComponents, PyVector_setComponents, NULL, NULL},
+	{"demensions", PyVector_getDemensions, PyVector_setDemensions, NULL, NULL},
+	{NULL, NULL, NULL, NULL, NULL}
+};
+ 
+
+static PyMethodDef module_methods[] = {
+	{NULL, NULL, 0, NULL}
+};
+ 
+/*
+ ***********************************************************************
+ * 
+ * Package everything into one object
+ * 
+ ***********************************************************************
+ */
+
+static PyTypeObject PyVectorType = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         /*ob_size*/
+    "VectorMath.Vector",       /*tp_name*/
+    sizeof(PyVector),      /*tp_basicsize*/
+    0,                         /*tp_itemsize*/
+    (destructor)PyVector_dealloc, /*tp_dealloc*/
+    0,                         /*tp_print*/
+    0,                         /*tp_getattr*/
+    0,                         /*tp_setattr*/
+    PyVector_cmp,          /*tp_compare*/
+    0,                         /*tp_repr*/
+    &PyVector_as_number,    /*tp_as_number*/
+    0,                         /*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    0,                         /*tp_getattro*/
+    0,                         /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    "Vector quantity",           /* tp_doc */
+    0,		               /* tp_traverse */
+    0,		               /* tp_clear */
+    0,		               /* tp_richcompare */
+    0,		               /* tp_weaklistoffset */
+    0,		               /* tp_iter */
+    0,		               /* tp_iternext */
+    PyVector_methods,      /* tp_methods */
+    0,                         /* tp_members */
+    PyVector_getset,       /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)PyVector_init, /* tp_init */
+    0,                           /* tp_alloc */
+    PyVector_new            /* tp_new */
+};
 
 /*
  ***********************************************************************
@@ -22,7 +137,7 @@
  ***********************************************************************
  */
  
-static PyObject *VectorObject_getComponents(VectorObject *self) {
+static PyObject *PyVector_getComponents(PyVector *self) {
 	
 	PyTupleObject *retList;     // Tuple containing components (faster than lists)
 	int i;
@@ -40,7 +155,7 @@ static PyObject *VectorObject_getComponents(VectorObject *self) {
 	return (PyObject *) retList; 
 }
 
-static int VectorObject_setComponents(VectorObject *self, PyObject *l) {
+static int PyVector_setComponents(PyVector *self, PyObject *l) {
 	
 	int i;
 	
@@ -63,7 +178,7 @@ static int VectorObject_setComponents(VectorObject *self, PyObject *l) {
 	return 0;
 }
 
-static PyObject *VectorObject_getDemensions(VectorObject *self) {
+static PyObject *PyVector_getDemensions(PyVector *self) {
 	
 	PyIntObject *n;     // Tuple containing components (faster than lists)
 
@@ -72,17 +187,16 @@ static PyObject *VectorObject_getDemensions(VectorObject *self) {
 	return (PyObject *) n; 
 }
 
-static void VectorObject_setDemensions(VectorObject *self, PyIntObject *i) {
+static int PyVector_setDemensions(PyVector *self, PyObject *i) {
 	
-	self->v->demensions = (int) PyInt_AsLong(i);
+	if (!PyInt_Check(i)) { // Ensure it is some form of an int
+		return -1;
+	}
 	
+	self->v->demensions = (int) PyInt_AS_LONG(i);  // attempt to read int
+	
+	return 0;
 }
- 
-static PyGetSetDef VectorObject_getset[] = {
-	{"components", VectorObject_getComponents, VectorObject_setComponents, NULL, NULL},
-	{"demensions", VectorObject_getDemensions, VectorObject_setDemensions, NULL, NULL},
-	{NULL, NULL, NULL, NULL, NULL}
-};
  
 /*
  ***********************************************************************
@@ -95,52 +209,44 @@ static PyGetSetDef VectorObject_getset[] = {
  ***********************************************************************
  */
 
-static void VectorObject_dealloc(VectorObject *self) {
+static PyObject *PyVector_new(PyTypeObject *type, PyObject *args) {
 	
-	vectorFree(self->v);   // Free initalized vector
-    self->ob_type->tp_free((PyObject*)self);  // Free PyObject
+    PyObject *newObject;                 // Vector object being created
     
-}
-
-static PyObject * VectorObject_new(PyTypeObject *type, PyObject *args) {
+    if (type != &PyVectorType) { 
+		assert(PyType_IsSubtype(type, &PyVectorType));  // Make sure it's a subclass of a vector
+	}
 	
-    VectorObject *self;                 // Vector object being created
-
-    self = (VectorObject *)type->tp_alloc(type, 0); // Allocate size of vector
+    newObject = type->tp_alloc(type, 0);                // allocate type
     
-    if (!self) {         // Ensure memory was allocated
+    if (!newObject) {      
 		return (PyObject *)NULL;
 	}
 	
-	self->v = calloc(sizeof(Vector), 0);  // Allocate vector without intializing components 
+	((PyVector *)newObject)->v = malloc(sizeof(Vector));  // allocate C-vector member
 
-    return (PyObject *)self;
+    return newObject;
 }
 
-static int VectorObject_init(VectorObject *self, PyObject *args) {
+static int PyVector_init(PyVector *self, PyObject *args) {
 	
 	PyObject *compList;
+	PyObject *(*getitem)(PyObject *, int);
 	int i;
 
     if (!PyArg_ParseTuple(args, "O", &compList)) { // Extract demensions tuple
         return -1; 
 	}
 	
-	if (PyTuple_Check(compList)) {   // If we recieved tuple from Python
+	if (PyTuple_Check(compList)) {
 		
+		getitem = PyTuple_GetItem;
 		self->v->demensions = PyTuple_GET_SIZE(compList);      // Get number of demensions
 		
-		for (i=0; i<self->v->demensions; i++) {  // Iterate through tuple and set components
-			self->v->components[i] = PyFloat_AsDouble(PyTuple_GET_ITEM(compList, i));
-		}
+	} else if (PyList_Check(compList)) {
 		
-	} else if (PyList_Check(compList)) { // If we recieved a list from Python
-		
+		getitem = PyList_GetItem;
 		self->v->demensions = PyList_GET_SIZE(compList);      // Get number of demensions
-
-		for (i=0; i<self->v->demensions; i++) {  // Iterate through list and set components
-			self->v->components[i] = PyFloat_AsDouble(PyList_GET_ITEM(compList, i));
-		}
 		
 	} else {
 		
@@ -148,116 +254,23 @@ static int VectorObject_init(VectorObject *self, PyObject *args) {
 		
 	}
 	
+	if (self->v->demensions > 3) {          // cap the number of components at 3. Not sure if it should spit back an error
+		self->v->demensions = 3;
+	}
+	
+	for (i=0; i<self->v->demensions; i++) {  // Iterate through tuple and set components
+		self->v->components[i] = PyFloat_AsDouble(getitem(compList, i));
+	}
+	
     return 0;       // Return success
 }
 
-/*
- ***********************************************************************
- * 
- * Define methods of Vector object
- * 
- ***********************************************************************
- */
-
-static PyMethodDef VectorObject_methods[] = {
-    {"copy", VectorObject_copy, METH_NOARGS, copy_docstring},
-    {"length", VectorObject_length, METH_NOARGS, magnitude_docstring},
-    {"magnitude", VectorObject_length, METH_NOARGS, magnitude_docstring},
-    {"cross", VectorObject_crossProduct, METH_O, crossProduct_docstring},
-    {"crossProduct", VectorObject_crossProduct, METH_O, crossProduct_docstring},
-    {"dot", VectorObject_dotProduct, METH_O, dotProduct_docstring},
-    {"dotProduct", VectorObject_dotProduct, METH_O, dotProduct_docstring},
-    {"angle", VectorObject_angle, METH_O, angle_docstring}, 
-    {"angularDifference", VectorObject_angle, METH_O, angle_docstring}, 
-    {"normalize", VectorObject_normalize, METH_O, NULL},
-    {NULL, NULL, 0, NULL}
-}; 
-
-static PyNumberMethods VectorObject_as_number = {
-    (binaryfunc)VectorObject_add,        /*nb_add*/
-    (binaryfunc)VectorObject_sub,        /*nb_subtract*/
-    (binaryfunc)VectorObject_mul,        /*nb_multiply*/
-    (binaryfunc)VectorObject_div,        /*nb_divide*/
-    0,                       /*nb_remainder*/
-    0,                       /*nb_divmod*/
-    0,                       /*nb_power*/
-    (unaryfunc)VectorObject_neg,        /*nb_negative*/
-    0,                       /*nb_positive*/
-    (unaryfunc)VectorObject_length,        /*nb_absolute*/
-    (inquiry)VectorObject_nonzero,       /*nb_nonzero*/
-    (unaryfunc)VectorObject_neg,           /*nb_invert*/
-    0,                          /*nb_lshift*/
-    0,                          /*nb_rshift*/
-    0,                          /*nb_and*/
-    0,                          /*nb_xor*/
-    0,                          /*nb_or*/
-    0,                          /*nb_coerce*/
-    0,                          /*nb_int*/
-    0,                          /*nb_long*/
-    0,                          /*nb_float*/
-    0,                          /*nb_oct*/
-    0,                          /*nb_hex*/
-    0,                          /*nb_inplace_add*/
-    0,                          /*nb_inplace_subtract*/
-    0,                          /*nb_inplace_multiply*/
-    0,                          /*nb_inplace_divide*/
-    0,                          /*nb_inplace_remainder*/
-    0,                          /*nb_inplace_power*/
-};
-
-static PyMethodDef module_methods[] = {
-	{NULL, NULL, 0, NULL}
-};
-
-/*
- ***********************************************************************
- * 
- * Package everything into one object
- * 
- ***********************************************************************
- */
-
-static PyTypeObject VectorObjectType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VectorMath.Vector",       /*tp_name*/
-    sizeof(VectorObject),      /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)VectorObject_dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    VectorObject_cmp,          /*tp_compare*/
-    0,                         /*tp_repr*/
-    &VectorObject_as_number,    /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "Vector quantity",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VectorObject_methods,      /* tp_methods */
-    0,                         /* tp_members */
-    VectorObject_getset,       /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)VectorObject_init, /* tp_init */
-    0,                           /* tp_alloc */
-    VectorObject_new            /* tp_new */
-};
+static void PyVector_dealloc(PyVector *self) {
+	
+	free(self->v);   // Free initalized vector
+    self->ob_type->tp_free((PyObject*)self);  // Free PyObject
+    
+}
 
 /*
  ***********************************************************************
@@ -267,9 +280,22 @@ static PyTypeObject VectorObjectType = {
  ***********************************************************************
  */
  
-static PyObject *VectorObject_add(VectorObject *self, VectorObject *other) {
+static PyObject *PyVector_copy(PyVector *self) {
 	
-	VectorObject *result;    // Object being returned
+	PyVector *result = (PyVector *) PyVector_new(&PyVectorType, NULL);
+	Vector *temp, *v = vectorCopy(self->v);
+	
+	temp = result->v;
+	result->v = v;
+	
+	free(temp);
+	
+	return (PyObject *) result;
+}
+ 
+static PyObject *PyVector_add(PyVector *self, PyVector *other) {
+	
+	PyVector *result;    // Object being returned
 	Vector *vr, *temp;  // C-vectors of a, b, and return value
 	
 	vr = vectorAdd(self->v, other->v);  // Add the two vectors and get the new one in return
@@ -278,7 +304,7 @@ static PyObject *VectorObject_add(VectorObject *self, VectorObject *other) {
 		return NULL;
 	}
 	
-	result    = (VectorObject *) VectorObject_new(&VectorObjectType, NULL); // Create new PyVector
+	result    = (PyVector *) PyVector_new(&PyVectorType, NULL); // Create new PyVector
 	temp      = result->v;      // this whole process basically frees the vector currently allocated, and sets the pointer equal to the resultant vector
 	result->v = vr;	            // It's faster than copying the data over because either way we have to free a vector. So this way we just toss a pointer around instead of 3 doubles
 	
@@ -287,9 +313,9 @@ static PyObject *VectorObject_add(VectorObject *self, VectorObject *other) {
 	return (PyObject *) result;
 }
 
-static PyObject *VectorObject_sub(VectorObject *self, VectorObject *other) {
+static PyObject *PyVector_sub(PyVector *self, PyVector *other) {
 	
-	VectorObject *result;    // Object being returned
+	PyVector *result;    // Object being returned
 	Vector *vr, *temp;  // C-vectors of a, b, and return value
 	
 	vr = vectorSub(self->v, other->v);  // Add the two vectors and get the new one in return
@@ -298,7 +324,7 @@ static PyObject *VectorObject_sub(VectorObject *self, VectorObject *other) {
 		return NULL;
 	}
 	
-	result    = (VectorObject *) VectorObject_new(&VectorObjectType, NULL); // Create new PyVector
+	result    = (PyVector *) PyVector_new(&PyVectorType, NULL); // Create new PyVector
 	temp      = result->v;
 	result->v = vr;	
 	
@@ -307,8 +333,96 @@ static PyObject *VectorObject_sub(VectorObject *self, VectorObject *other) {
 	return (PyObject *) result;
 }
 
+static PyObject *PyVector_crossProduct(PyVector *self, PyVector *other) {
+	
+	PyVector *retObject;
+	Vector *vr, *temp;
+	
+	vr = crossProduct(self->v, other->v); // Calculate cross-product
+	
+	if (!vr) { // ensure we have a vector (High probability that we don't since cross product only works on 3D vectors)
+		return NULL;
+	}
+	
+	retObject = (PyVector *) PyVector_new(&PyVectorType, NULL);
+	temp      = retObject->v;
+	retObject->v = vr;
+	
+	vectorFree(temp);
+	
+	return (PyObject *) retObject;
+}
 
-static PyObject *VectorObject_length(VectorObject* self) {
+static PyObject *PyVector_mul(PyVector *self, PyObject *other) {
+	
+	double k;
+	PyVector *ret;
+	Vector *temp, *vr;
+	
+	if (PyObject_TypeCheck(other, &PyVectorType)) {  // If the other object is a vector
+	
+		return PyVector_dotProduct(self, other);     // make the crude assumption they meant dot product.
+		 
+	} else {
+		
+		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's either a float or an int
+		ret = (PyVector *) PyVector_new(&PyVectorType, NULL);  // Create new pyvector object
+		
+		vr     = vectorMul(self->v, k);       // multiply the vector by constant k
+		temp   = ret->v;              // set temp equal to currently allocated vector
+		ret->v = vr;                  // set the vector pointer to the resulting vector
+		
+		vectorFree(temp);             // free the previously allocated vector
+		
+	    return (PyObject *) ret;
+	}
+}
+
+static PyObject *PyVector_div(PyVector *self, PyObject *other) {
+	
+	double k;
+	PyVector *ret;
+	Vector *temp, *vr;
+	
+	if (PyObject_TypeCheck(other, &PyVectorType)) {  // If the other object is a vector
+	
+		return PyVector_dotProduct(self, other);     // make the crude assumption they meant dot product.
+		 
+	} else {
+		
+		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's either a float or an int
+		ret = (PyVector *) PyVector_new(&PyVectorType, NULL);  // Create new pyvector object
+		
+		vr     = vectorDiv(self->v, k);       // multiply the vector by constant k
+		temp   = ret->v;              // set temp equal to currently allocated vector
+		ret->v = vr;                  // set the vector pointer to the resulting vector
+		
+		vectorFree(temp);             // free the previously allocated vector
+		
+	    return (PyObject *) ret;
+	}
+}
+
+static PyObject *PyVector_neg(PyVector *self) {
+	
+	PyVector *ret;
+	Vector *inverse, *temp;
+	
+	ret = PyVector_new(&PyVectorType, NULL); // create PyVector object
+	
+	inverse = vectorSub(ret->v, self->v);  // new vector is initialized to zero, so we subtract the vector to get it's inverse
+	temp    = ret->v;
+	ret->v  = inverse;
+	
+	free(temp);  // free allocated vector
+	
+	return (PyObject *) ret;
+}
+
+static PyObject *PyVector_normalize(PyVector *self) {
+}
+
+static PyObject *PyVector_length(PyVector* self) {
 	
     PyObject *result;
     double length;
@@ -320,27 +434,7 @@ static PyObject *VectorObject_length(VectorObject* self) {
     return result;
 }
 
-static PyObject *VectorObject_crossProduct(VectorObject *self, VectorObject *other) {
-	
-	VectorObject *retObject;
-	Vector *vr, *temp;
-	
-	vr = crossProduct(self->v, other->v); // Calculate cross-product
-	
-	if (!vr) { // ensure we have a vector (High probability that we don't since cross product only works on 3D vectors)
-		return NULL;
-	}
-	
-	retObject = (VectorObject *) VectorObject_new(&VectorObjectType, NULL);
-	temp      = retObject->v;
-	retObject->v = vr;
-	
-	vectorFree(temp);
-	
-	return (PyObject *) retObject;
-}
-
-static PyObject *VectorObject_dotProduct(VectorObject *self, VectorObject *other) {
+static PyObject *PyVector_dotProduct(PyVector *self, PyVector *other) {
 	
 	PyObject *retObject;
 	double result;
@@ -352,7 +446,7 @@ static PyObject *VectorObject_dotProduct(VectorObject *self, VectorObject *other
 	return retObject;
 }
 
-static PyObject *VectorObject_angle(VectorObject *self, VectorObject *other) {
+static PyObject *PyVector_angle(PyVector *self, PyVector *other) {
 	
 	PyObject *retObject;
 	double result;
@@ -364,23 +458,9 @@ static PyObject *VectorObject_angle(VectorObject *self, VectorObject *other) {
 	return retObject;
 }
 
-
-static PyObject *VectorObject_copy(VectorObject *self) {
+static int PyVector_cmp(PyVector *self, PyVector *other) {
 	
-	VectorObject *result = (VectorObject *) VectorObject_new(&VectorObjectType, NULL);
-	Vector *temp, *v = vectorCopy(self->v);
-	
-	temp = result->v;
-	result->v = v;
-	
-	free(temp);
-	
-	return (PyObject *) result;
-}
-
-static int VectorObject_cmp(VectorObject *self, VectorObject *other) {
-	
-	if (!PyObject_TypeCheck(other, &VectorObjectType)) { 
+	if (!PyObject_TypeCheck(other, &PyVectorType)) { 
 		// Ensure the object is a vector
 		return -2;
 	} else if (self->v->demensions < other->v->demensions) {
@@ -395,7 +475,7 @@ static int VectorObject_cmp(VectorObject *self, VectorObject *other) {
 	}
 }
 
-static int VectorObject_nonzero(VectorObject *self) {
+static int PyVector_nonzero(PyVector *self) {
 	
 	if (vectorLength(self->v)) { // If it has any sort of length, then it is not zero
 		return 1;
@@ -403,76 +483,6 @@ static int VectorObject_nonzero(VectorObject *self) {
 	
 	return 0;  // Otherwise it is zero
 }
-
-static PyObject *VectorObject_mul(VectorObject *self, PyObject *other) {
-	
-	double k;
-	VectorObject *ret;
-	Vector *temp, *vr;
-	
-	if (PyObject_TypeCheck(other, &VectorObjectType)) {  // If the other object is a vector
-	
-		return VectorObject_dotProduct(self, other);     // make the crude assumption they meant dot product.
-		 
-	} else {
-		
-		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's either a float or an int
-		ret = (VectorObject *) VectorObject_new(&VectorObjectType, NULL);  // Create new pyvector object
-		
-		vr     = vectorMul(self->v, k);       // multiply the vector by constant k
-		temp   = ret->v;              // set temp equal to currently allocated vector
-		ret->v = vr;                  // set the vector pointer to the resulting vector
-		
-		vectorFree(temp);             // free the previously allocated vector
-		
-	    return (PyObject *) ret;
-	}
-}
-
-static PyObject *VectorObject_div(VectorObject *self, PyObject *other) {
-	
-	double k;
-	VectorObject *ret;
-	Vector *temp, *vr;
-	
-	if (PyObject_TypeCheck(other, &VectorObjectType)) {  // If the other object is a vector
-	
-		return VectorObject_dotProduct(self, other);     // make the crude assumption they meant dot product.
-		 
-	} else {
-		
-		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's either a float or an int
-		ret = (VectorObject *) VectorObject_new(&VectorObjectType, NULL);  // Create new pyvector object
-		
-		vr     = vectorDiv(self->v, k);       // multiply the vector by constant k
-		temp   = ret->v;              // set temp equal to currently allocated vector
-		ret->v = vr;                  // set the vector pointer to the resulting vector
-		
-		vectorFree(temp);             // free the previously allocated vector
-		
-	    return (PyObject *) ret;
-	}
-}
-
-static PyObject *VectorObject_neg(VectorObject *self) {
-	
-	VectorObject *ret;
-	Vector *inverse, *temp;
-	
-	ret = VectorObject_new(&VectorObjectType, NULL); // create PyVector object
-	
-	inverse = vectorSub(ret->v, self->v);  // new vector is initialized to zero, so we subtract the vector to get it's inverse
-	temp    = ret->v;
-	ret->v  = inverse;
-	
-	vectorFree(temp);  // free allocated vector
-	
-	return (PyObject *) ret;
-}
-
-static PyObject *VectorObject_normalize(VectorObject *self) {
-}
-
 
 /*
  ***********************************************************************
@@ -487,10 +497,10 @@ PyMODINIT_FUNC initVectorMath(void) {
     if (m == NULL)
         return;
         
-    if (PyType_Ready(&VectorObjectType) < 0) {     // Finalize type
+    if (PyType_Ready(&PyVectorType) < 0) {     // Finalize type
 		return;
 	}
         
-    Py_INCREF(&VectorObjectType);                  // Increment reference to pass to Python
-    PyModule_AddObject(m, "Vector", (PyObject *)&VectorObjectType);  // Add to objects list so we can see it
+    Py_INCREF(&PyVectorType);                  // Increment reference to pass to Python
+    PyModule_AddObject(m, "Vector", (PyObject *)&PyVectorType);  // Add to objects list so we can see it
 }

@@ -14,24 +14,32 @@ extern "C" {
 typedef struct {
     PyObject_HEAD       // Python object headers
     Vector *v;
-} VectorObject;
+} PyVector;
+
+static PyObject *PyVector_new(PyTypeObject *type, PyObject *args);
+static int PyVector_init(PyVector *self, PyObject *args);
+static void PyVector_dealloc(PyVector *self);
+static int PyVector_setDemensions(PyVector *self, PyObject *i);
+static int PyVector_setComponents(PyVector *self, PyObject *i);
+static PyObject *PyVector_getComponents(PyVector *self);
+static PyObject *PyVector_getDemensions(PyVector *self);
 
 // comparisons
-static int VectorObject_cmp(VectorObject *self, VectorObject *other);
-static int VectorObject_nonzero(VectorObject *self);
-// vector return values
-static PyObject *VectorObject_add(VectorObject *self, VectorObject *other);
-static PyObject *VectorObject_sub(VectorObject *self, VectorObject *other);
-static PyObject *VectorObject_mul(VectorObject *self, PyObject *other);
-static PyObject *VectorObject_div(VectorObject *self, PyObject *other);
-static PyObject *VectorObject_crossProduct(VectorObject *self, VectorObject *other);
-static PyObject *VectorObject_normalize(VectorObject *self);
-static PyObject *VectorObject_copy(VectorObject *self);
-// scalar return values
-static PyObject *VectorObject_dotProduct(VectorObject *self, VectorObject *other);
-static PyObject *VectorObject_angle(VectorObject *self, VectorObject *other); 
-static PyObject *VectorObject_neg(VectorObject *self);
-static PyObject *VectorObject_length(VectorObject *self);
+static int PyVector_cmp(PyVector *self, PyVector *other);
+static int PyVector_nonzero(PyVector *self);
+// operations returning vectors
+static PyObject *PyVector_add(PyVector *self, PyVector *other);
+static PyObject *PyVector_sub(PyVector *self, PyVector *other);
+static PyObject *PyVector_mul(PyVector *self, PyObject *other);
+static PyObject *PyVector_div(PyVector *self, PyObject *other);
+static PyObject *PyVector_crossProduct(PyVector *self, PyVector *other);
+static PyObject *PyVector_normalize(PyVector *self);
+static PyObject *PyVector_copy(PyVector *self);
+// operations returning scalars
+static PyObject *PyVector_dotProduct(PyVector *self, PyVector *other);
+static PyObject *PyVector_angle(PyVector *self, PyVector *other); 
+static PyObject *PyVector_neg(PyVector *self);
+static PyObject *PyVector_length(PyVector *self);
 
 static char module_docstring[] =
     "This module provides an interface for vector processing in C.";
