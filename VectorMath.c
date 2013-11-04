@@ -33,6 +33,7 @@ static PyMethodDef PyVector_methods[] = {
     {"angularDifference", PyVector_angle, METH_O, angle_docstring}, 
     {"norm", PyVector_normalize, METH_NOARGS, NULL},
     {"normalize", PyVector_normalize, METH_NOARGS, NULL},
+    {"rotate", PyVector_rotate, METH_O, NULL},
     {NULL, NULL, 0, NULL}
 }; 
 
@@ -366,7 +367,7 @@ static PyObject *PyVector_mul(PyVector *self, PyObject *other) {
 		 
 	} else {
 		
-		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's either a float or an int
+		k   = PyFloat_AsDouble(other);          // Otherwise, we assume it's a number
 		ret = (PyVector *) PyVector_new(self->ob_type, NULL);  // Create new pyvector object
 		
 		vr     = vectorMul(self->v, k);       // multiply the vector by constant k
@@ -468,6 +469,19 @@ static PyObject *PyVector_angle(PyVector *self, PyVector *other) {
 	retObject = PyFloat_FromDouble(result);
 	
 	return retObject;
+}
+
+static PyObject *PyVector_rotate(PyVector *self, PyVector *rotation) {
+	
+	PyVector *newVect;
+	
+	newVect = (PyVector *) PyVector_new(self->ob_type, NULL);
+	
+	free(newVect->v);
+	
+	newVect->v = vectorRotate(self->v, rotation->v);
+
+	return (PyObject *) newVect;
 }
 
 static int PyVector_cmp(PyVector *self, PyVector *other) {

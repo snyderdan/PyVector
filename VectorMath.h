@@ -33,6 +33,7 @@ static PyObject *PyVector_sub(PyVector *self, PyVector *other);
 static PyObject *PyVector_mul(PyVector *self, PyObject *other);
 static PyObject *PyVector_div(PyVector *self, PyObject *other);
 static PyObject *PyVector_crossProduct(PyVector *self, PyVector *other);
+static PyObject *PyVector_rotate(PyVector *self, PyVector *rotation);
 static PyObject *PyVector_normalize(PyVector *self);
 static PyObject *PyVector_neg(PyVector *self);
 static PyObject *PyVector_copy(PyVector *self);

@@ -166,6 +166,42 @@ DLLEX double angle(Vector *a, Vector *b) {
 	return theta * 180.0 / PI;
 }
 
+/**
+ * Vector a is rotated along each axis by the number of degrees specified by that component in the rotation vector.
+ * This means that if you pass the rotation vector (45, 90, 0), vector a will be rotated 45 degrees along the 
+ * i axis, 90 degrees along the j axis, and 0 degrees along the k axis. 
+ */
+DLLEX Vector *vectorRotate(Vector *a, Vector *rotation) {
+	
+	Vector *rotated = vectorCopy(a);
+	double *i = &(rotated->components[0]),   // declare pointers to save typing, and avoid having to reassign each component by hand
+	       *j = &(rotated->components[1]),   // even if it means more memory references because I'm lazy.
+	       *k = &(rotated->components[2]);
+	double iRot = rotation->components[0] * PI / 180.0,  // Convert each rotational value to radians
+	       jRot = rotation->components[1] * PI / 180.0,
+	       kRot = rotation->components[2] * PI / 180.0;
+	double sinI = sin(iRot),                 // Compute the sine and cosine of each rotation to avoid computing them multiple times
+	       cosI = cos(iRot),
+	       sinJ = sin(jRot),
+	       cosJ = cos(jRot),
+	       sinK = sin(kRot),
+	       cosK = cos(kRot);
+	      
+	// rotate around i axis (i component remains constant)
+	// not hardcore enough to write the rotations as one-liners
+	*j = (*j)*cosI - (*k)*sinI; 
+	*k = (*j)*sinI + (*k)*cosI;
+	
+	// rotate around j axis (j component remains constant)
+	*i = (*k)*sinJ + (*i)*cosJ;
+	*k = (*k)*cosJ - (*i)*sinJ;
+	
+	// rotate around k axis (k component remains constant)
+	*i = (*i)*cosK - (*j)*sinK;
+	*j = (*i)*sinK + (*j)*cosK;
+	
+	return rotated;
+}
 
 #ifdef BASIC_TIME_TEST // Little loop I made up for comparing pure C vs. Python vs. ctypes vs. extension
 

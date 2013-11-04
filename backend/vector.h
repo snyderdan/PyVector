@@ -26,5 +26,12 @@ DLLEX Vector __cdecl *vectorDiv(Vector *a, double b);     // Divide vector by sc
 DLLEX double __cdecl dotProduct(Vector *a, Vector *b);    // Calculates and returns the dot product of the two vector quantities; a and b remain unaltered
 DLLEX Vector __cdecl *crossProduct(Vector *a, Vector *b); // Calculates the cross or scalar product of a * b and stores in a
 DLLEX double __cdecl angle(Vector *a, Vector *b);   // Returns the angle between the two vectors
+DLLEX Vector __cdecl *vectorRotate(Vector *a, Vector *rotation);  
+/**
+ * Rotates vector a by the number of degrees specified by each component, around that axis. 
+ * So if you pass it the rotation vector (45, 27.5, 0), vector a will rotate 45 degrees around the i axis,
+ * 27.5 degrees around the j axis, and 0 degrees around the k axis. 
+ */
+		
 
 # endif
