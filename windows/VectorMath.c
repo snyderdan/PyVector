@@ -182,20 +182,20 @@ static int PyVector_setComponents(PyVector *self, PyObject *l) {
 
 static PyObject *PyVector_getDemensions(PyVector *self) {
 	
-	PyIntObject *n;     // Tuple containing components (faster than lists)
+	PyLongObject *n;     // Tuple containing components (faster than lists)
 
-	n = PyInt_FromLong((long) self->v->demensions);
+	n = PyLong_FromLong((long) self->v->demensions);
 	
 	return (PyObject *) n; 
 }
 
 static int PyVector_setDemensions(PyVector *self, PyObject *i) {
 	
-	if (!PyInt_Check(i)) { // Ensure it is some form of an int
+	if (!PyLong_Check(i)) { // Ensure it is some form of an int
 		return -1;
 	}
 	
-	self->v->demensions = (int) PyInt_AS_LONG(i);  // attempt to read int
+	self->v->demensions = (int) PyLong_AS_LONG(i);  // attempt to read int
 	
 	return 0;
 }
