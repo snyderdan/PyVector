@@ -191,11 +191,7 @@ static PyObject *PyVector_getDemensions(PyVector *self) {
 
 static int PyVector_setDemensions(PyVector *self, PyObject *i) {
 	
-	if (!PyLong_Check(i)) { // Ensure it is some form of an int
-		return -1;
-	}
-	
-	self->v->demensions = (int) PyLong_AS_LONG(i);  // attempt to read int
+	self->v->demensions = (int) PyLong_AsLong(i);  // attempt to read int
 	
 	return 0;
 }
