@@ -167,26 +167,25 @@ DLLEX double angle(Vector *a, Vector *b) {
 }
 
 /**
- * Vector a is rotated along each axis by the number of degrees specified by that component in the rotation vector.
- * This means that if you pass the rotation vector (45, 90, 0), vector a will be rotated 45 degrees along the 
- * i axis, 90 degrees along the j axis, and 0 degrees along the k axis. 
+ * Vector a is rotated along each axis by the number of radians specified by that component in the rotation vector.
+ * This means that if you pass the rotation vector (1, 6, 0), vector a will be rotated 1 radian along the 
+ * i axis, 6 radians along the j axis, and 0 radians along the k axis. 
  */
 DLLEX Vector *vectorRotate(Vector *a, Vector *rotation) {
 	
-	Vector *rotated = vectorCopy(a);
+	double length = vectorLength(a);
+	Vector *rotated = vectorCopy(a), *holder;
+	
 	double *i = &(rotated->components[0]),   // declare pointers to save typing, and avoid having to reassign each component by hand
 	       *j = &(rotated->components[1]),   // even if it means more memory references because I'm lazy.
 	       *k = &(rotated->components[2]);
-	double iRot = rotation->components[0] * PI / 180.0,  // Convert each rotational value to radians
-	       jRot = rotation->components[1] * PI / 180.0,
-	       kRot = rotation->components[2] * PI / 180.0;
-	double sinI = sin(iRot),                 // Compute the sine and cosine of each rotation to avoid computing them multiple times
-	       cosI = cos(iRot),
-	       sinJ = sin(jRot),
-	       cosJ = cos(jRot),
-	       sinK = sin(kRot),
-	       cosK = cos(kRot);
-	      
+	double sinI = sin(rotation->components[0]),                 // Compute the sine and cosine of each rotation to avoid computing them multiple times
+	       cosI = cos(rotation->components[0]),
+	       sinJ = sin(rotation->components[1]),
+	       cosJ = cos(rotation->components[1]),
+	       sinK = sin(rotation->components[2]),
+	       cosK = cos(rotation->components[2]);
+
 	// rotate around i axis (i component remains constant)
 	// not hardcore enough to write the rotations as one-liners
 	*j = (*j)*cosI - (*k)*sinI; 
@@ -199,6 +198,14 @@ DLLEX Vector *vectorRotate(Vector *a, Vector *rotation) {
 	// rotate around k axis (k component remains constant)
 	*i = (*i)*cosK - (*j)*sinK;
 	*j = (*i)*sinK + (*j)*cosK;
+	
+	holder = vectorNormalize(rotated);
+	
+	vectorFree(rotated);
+	
+	rotated = vectorMul(holder, length);
+	
+	vectorFree(holder);
 	
 	return rotated;
 }
